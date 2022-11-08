@@ -167,7 +167,7 @@ mod tests {
         );
     }
     #[test]
-    fn test_unicode(){
+    fn test_unicode() {
         assert_eq!(
             levenshtein_distance(&String::from("😀"), &String::from("😀")),
             0
