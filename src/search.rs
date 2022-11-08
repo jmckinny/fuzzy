@@ -13,16 +13,16 @@ pub fn search_dir(
         if file.file_type()?.is_file() {
             if let Ok(data) = load_file(&file.path()) {
                 for (i, line) in data.lines().enumerate() {
-                    for s in line.split_whitespace() {
-                        let diff = levenshtein_distance(&target.to_string(), &s.to_string());
-                        if diff < diff_limit {
-                            result.push(hit::Hit::new(
-                                String::from(s),
-                                file.path().display().to_string(),
-                                i + 1,
-                            ))
-                        }
-                    }
+                    let mut valid = line
+                        .split_whitespace()
+                        .filter(|x| {
+                            levenshtein_distance(&target.to_string(), &x.to_string()) < diff_limit
+                        })
+                        .map(|x| {
+                            hit::Hit::new(String::from(x), file.path().display().to_string(), i + 1)
+                        })
+                        .collect();
+                    result.append(&mut valid);
                 }
             }
         }
