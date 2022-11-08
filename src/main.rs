@@ -54,3 +54,30 @@ fn load_file(path: &Path) -> Result<String, std::io::Error> {
     file.read_to_string(&mut result)?;
     Ok(result)
 }
+
+#[cfg(test)]
+mod tests{
+    use std::path::Path;
+    use super::*;
+
+    #[test]
+    fn it_works() {
+        let results = search_dir(Path::new("./tests"), "Hello").unwrap();
+        assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
+    }
+
+    #[test]
+    fn fuzzier() {
+        let results = search_dir(Path::new("./tests"), "Hell").unwrap();
+        assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
+
+        let results = search_dir(Path::new("./tests"), "World").unwrap();
+        assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tWorld!");
+    }
+
+    #[test]
+    fn cases() {
+        let results = search_dir(Path::new("./tests"), "hello").unwrap();
+        assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
+    }
+}

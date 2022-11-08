@@ -1,5 +1,5 @@
 use std::fmt;
-
+#[derive(PartialEq, Eq)]
 pub struct Hit {
     data: String,
     file: String,
