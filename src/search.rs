@@ -32,18 +32,19 @@ pub fn search_dir(
 
 fn levenshtein_distance(target: &String, other: &String) -> usize {
     let mut matrix = vec![vec![0_usize; target.len() + 1]; other.len() + 1];
-
+    let target_len = target.chars().count();
+    let other_len = other.chars().count();
     // Empty string sub-problems can just be solved by inserting i characters
-    for i in 0..=other.len() {
+    for i in 0..=other_len {
         matrix[i][0] = i;
     }
 
-    for j in 0..=target.len() {
+    for j in 0..=target_len {
         matrix[0][j] = j
     }
 
-    for j in 1..=target.len() {
-        for i in 1..=other.len() {
+    for j in 1..=target_len {
+        for i in 1..=other_len {
             let substitue_cost =
                 if target.chars().nth(j - 1).unwrap() == other.chars().nth(i - 1).unwrap() {
                     0
@@ -58,7 +59,7 @@ fn levenshtein_distance(target: &String, other: &String) -> usize {
             );
         }
     }
-    matrix[other.len()][target.len()]
+    matrix[other_len][target_len]
 }
 
 fn min3(x: usize, y: usize, z: usize) -> usize {
@@ -163,6 +164,21 @@ mod tests {
         assert_eq!(
             levenshtein_distance(&String::from("A"), &String::from("Apple")),
             4
+        );
+    }
+    #[test]
+    fn test_unicode(){
+        assert_eq!(
+            levenshtein_distance(&String::from("😀"), &String::from("😀")),
+            0
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("😀"), &String::from("😀😁")),
+            1
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("😀🙂"), &String::from("😀😁🙂")),
+            1
         );
     }
 }
