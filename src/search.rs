@@ -80,22 +80,22 @@ mod tests {
 
     #[test]
     fn it_works() {
-        let results = search_dir(Path::new("./tests"), "Hello", 2).unwrap();
+        let results = search_dir(Path::new("./tests"), "Hello", DEFAULT_LIMIT).unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
     }
 
     #[test]
     fn fuzzier() {
-        let results = search_dir(Path::new("./tests"), "Hell", 2).unwrap();
+        let results = search_dir(Path::new("./tests"), "Hell", DEFAULT_LIMIT).unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
 
-        let results = search_dir(Path::new("./tests"), "World!", 2).unwrap();
+        let results = search_dir(Path::new("./tests"), "World!", DEFAULT_LIMIT).unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tWorld!");
     }
 
     #[test]
     fn cases() {
-        let results = search_dir(Path::new("./tests"), "hello", 2).unwrap();
+        let results = search_dir(Path::new("./tests"), "hello", DEFAULT_LIMIT).unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
     }
 
@@ -132,6 +132,37 @@ mod tests {
         assert_eq!(
             levenshtein_distance(&String::from("manual"), &String::from("=")),
             6
+        );
+    }
+    #[test]
+    fn edgecases() {
+        assert_eq!(
+            levenshtein_distance(&String::from(""), &String::from("")),
+            0
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("Apple"), &String::from("")),
+            5
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from(""), &String::from("Apple")),
+            5
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("a"), &String::from("a")),
+            0
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from(""), &String::from("a")),
+            1
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("a"), &String::from("")),
+            1
+        );
+        assert_eq!(
+            levenshtein_distance(&String::from("A"), &String::from("Apple")),
+            4
         );
     }
 }
