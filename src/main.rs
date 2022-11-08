@@ -20,7 +20,7 @@ fn search_dir(path: &Path, target: &str) -> Result<Vec<hit::Hit>, std::io::Error
             if let Ok(data) = load_file(&file.path()) {
                 for (i, line) in data.lines().enumerate() {
                     for s in line.split_whitespace() {
-                        let diff = chars_diff(target, s);
+                        let diff = levenshtein_distance(&target.to_string(), &s.to_string());
                         if diff < LIMIT {
                             result.push(hit::Hit::new(
                                 String::from(s),
@@ -36,16 +36,24 @@ fn search_dir(path: &Path, target: &str) -> Result<Vec<hit::Hit>, std::io::Error
     Ok(result)
 }
 
-fn chars_diff(target: &str, other: &str) -> usize {
-    let mut result = 0;
-    for it in target.chars().zip(other.chars()) {
-        let (target_c, other_c) = it;
-        if target_c != other_c {
-            result += 1;
-        }
+fn levenshtein_distance(target: &String, other: &String) -> usize {
+    if target.is_empty() {
+        other.len()
+    } else if other.is_empty() {
+        target.len()
+    } else if target.chars().next() == other.chars().next() {
+        levenshtein_distance(
+            &target.chars().skip(1).collect(),
+            &other.chars().skip(1).collect(),
+        )
+    } else {
+        let target_tail = target.chars().skip(1).collect();
+        let other_tail = other.chars().skip(1).collect();
+        let insert = levenshtein_distance(target, &other_tail);
+        let delete = levenshtein_distance(&target_tail, other);
+        let replaced = levenshtein_distance(&target_tail, &other_tail);
+        1 + insert.min(delete.min(replaced))
     }
-    result += target.len().abs_diff(other.len());
-    result
 }
 
 fn load_file(path: &Path) -> Result<String, std::io::Error> {
@@ -56,9 +64,9 @@ fn load_file(path: &Path) -> Result<String, std::io::Error> {
 }
 
 #[cfg(test)]
-mod tests{
-    use std::path::Path;
+mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn it_works() {
@@ -71,7 +79,7 @@ mod tests{
         let results = search_dir(Path::new("./tests"), "Hell").unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
 
-        let results = search_dir(Path::new("./tests"), "World").unwrap();
+        let results = search_dir(Path::new("./tests"), "World!").unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tWorld!");
     }
 
@@ -79,5 +87,25 @@ mod tests{
     fn cases() {
         let results = search_dir(Path::new("./tests"), "hello").unwrap();
         assert_eq!(format!("{}", results[0]), "./tests/hello.txt:1\tHello");
+    }
+
+    #[test]
+    fn distance() {
+        assert_eq!(
+            levenshtein_distance(&"Hello".to_string(), &"Hello".to_string()),
+            0
+        );
+        assert_eq!(
+            levenshtein_distance(&"Helo".to_string(), &"Hello".to_string()),
+            1
+        );
+        assert_eq!(
+            levenshtein_distance(&"ello".to_string(), &"Hello".to_string()),
+            1
+        );
+        assert_eq!(
+            levenshtein_distance(&"Heo".to_string(), &"Hello".to_string()),
+            2
+        );
     }
 }
