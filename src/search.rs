@@ -15,9 +15,7 @@ pub fn search_dir(
                 for (i, line) in data.lines().enumerate() {
                     let mut valid = line
                         .split_whitespace()
-                        .filter(|x| {
-                            levenshtein_distance(&target.to_string(), &x.to_string()) < diff_limit
-                        })
+                        .filter(|x| levenshtein_distance(target, x) < diff_limit)
                         .map(|x| {
                             hit::Hit::new(String::from(x), file.path().display().to_string(), i + 1)
                         })
@@ -30,14 +28,14 @@ pub fn search_dir(
     Ok(result)
 }
 
-fn levenshtein_distance(target: &String, other: &String) -> usize {
+fn levenshtein_distance(target: &str, other: &str) -> usize {
     let mut matrix = vec![vec![0_usize; target.len() + 1]; other.len() + 1];
     let target_len = target.chars().count();
     let other_len = other.chars().count();
     // Empty string sub-problems can just be solved by inserting i characters
-    for i in 0..=other_len {
+    (0..=other_len).for_each(|i| {
         matrix[i][0] = i;
-    }
+    });
 
     for j in 0..=target_len {
         matrix[0][j] = j
@@ -102,83 +100,32 @@ mod tests {
 
     #[test]
     fn basic_distance() {
-        assert_eq!(
-            levenshtein_distance(&"Hello".to_string(), &"Hello".to_string()),
-            0
-        );
-        assert_eq!(
-            levenshtein_distance(&"Helo".to_string(), &"Hello".to_string()),
-            1
-        );
-        assert_eq!(
-            levenshtein_distance(&"ello".to_string(), &"Hello".to_string()),
-            1
-        );
-        assert_eq!(
-            levenshtein_distance(&"Heo".to_string(), &"Hello".to_string()),
-            2
-        );
+        assert_eq!(levenshtein_distance("Hello", "Hello"), 0);
+        assert_eq!(levenshtein_distance("Helo", "Hello"), 1);
+        assert_eq!(levenshtein_distance("ello", "Hello"), 1);
+        assert_eq!(levenshtein_distance("Heo", "Hello"), 2);
     }
 
     #[test]
     fn complex_distance() {
-        assert_eq!(
-            levenshtein_distance(&String::from("kitten"), &String::from("sitting")),
-            3
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("sunday"), &String::from("saturday")),
-            3
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("manual"), &String::from("=")),
-            6
-        );
+        assert_eq!(levenshtein_distance("kitten", "sitting"), 3);
+        assert_eq!(levenshtein_distance("sunday", "saturday"), 3);
+        assert_eq!(levenshtein_distance("manual", "="), 6);
     }
     #[test]
     fn edgecases() {
-        assert_eq!(
-            levenshtein_distance(&String::from(""), &String::from("")),
-            0
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("Apple"), &String::from("")),
-            5
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from(""), &String::from("Apple")),
-            5
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("a"), &String::from("a")),
-            0
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from(""), &String::from("a")),
-            1
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("a"), &String::from("")),
-            1
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("A"), &String::from("Apple")),
-            4
-        );
+        assert_eq!(levenshtein_distance("", ""), 0);
+        assert_eq!(levenshtein_distance("Apple", ""), 5);
+        assert_eq!(levenshtein_distance("", "Apple"), 5);
+        assert_eq!(levenshtein_distance("a", "a"), 0);
+        assert_eq!(levenshtein_distance("", "a"), 1);
+        assert_eq!(levenshtein_distance("a", ""), 1);
+        assert_eq!(levenshtein_distance("A", "Apple"), 4);
     }
     #[test]
     fn test_unicode() {
-        assert_eq!(
-            levenshtein_distance(&String::from("😀"), &String::from("😀")),
-            0
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("😀"), &String::from("😀😁")),
-            1
-        );
-        assert_eq!(
-            levenshtein_distance(&String::from("😀🙂"), &String::from("😀😁🙂")),
-            1
-        );
+        assert_eq!(levenshtein_distance("😀", "😀"), 0);
+        assert_eq!(levenshtein_distance("😀", "😀😁"), 1);
+        assert_eq!(levenshtein_distance("😀🙂", "😀😁🙂"), 1);
     }
 }
